@@ -2,6 +2,8 @@ import copy
 import pygame as pygame
 import math
 
+#shiet
+
 pygame.init()
 originalGameBoard = [
     [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
