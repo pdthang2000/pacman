@@ -21,7 +21,7 @@ originalGameBoard = [
     [3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 3, 3, 1, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3],
     [3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 1, 3, 3, 1, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3],
     [3, 3, 3, 3, 3, 3, 2, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 2, 3, 3, 3, 3, 3, 3],
-    [3, 3, 3, 3, 3, 3, 2, 3, 3, 1, 3, 3, 3, 1, 1, 3, 3, 3, 1, 3, 3, 2, 3, 3, 3, 3, 3, 3],
+    [3, 3, 3, 3, 3, 3, 2, 3, 3, 1, 3, 3, 1, 1, 1, 1, 3, 3, 1, 3, 3, 2, 3, 3, 3, 3, 3, 3],
     [3, 3, 3, 3, 3, 3, 2, 3, 3, 1, 3, 4, 4, 4, 4, 4, 4, 3, 1, 3, 3, 2, 3, 3, 3, 3, 3, 3],
     [1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 3, 4, 4, 4, 4, 4, 4, 3, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1],  # Middle Lane Row: 14
     [3, 3, 3, 3, 3, 3, 2, 3, 3, 1, 3, 4, 4, 4, 4, 4, 4, 3, 1, 3, 3, 2, 3, 3, 3, 3, 3, 3],
@@ -54,7 +54,7 @@ spriteOffset = square * (1 - spriteRatio) * (1 / 2)
 print(spriteOffset)
 screen = pygame.display.set_mode((width, height))
 pygame.display.flip()
-game_over = False  # Biến đánh dấu sự kiện kết thúc game
+game_over = False  # Biến đánh dấu sự kiện kết thúc game 
 
 
 curPoint  = copy.deepcopy(originalGameBoard)
@@ -81,24 +81,10 @@ src = "src/"
 imgPacClose = "yellow2.jpg"  # hình tròn vàng
 y = "image1.jpg"  # tường màu xanh
 blinky = "blinky.png"
-#print(blinky)
+cyanghost = "cyan.jpg"
 
-def initPac():
-    p = pygame.image.load(src + imgPacClose)
-    p = pygame.transform.scale(p, (square, square))
-    screen.blit(p, (14 * square, 26 * square, square, square))
-
-
-def initBlinky():
-    p = pygame.image.load(src + blinky)
-    p = pygame.transform.scale(p, (square, square))
-    screen.blit(p, (14 * square, 16 * square, square, square))
-
-#check integer or not
-def check(row, col): 
-    if row != int(row):
-        return True
-    if col != int(col):
+def isInt( x ) :
+    if x == int(x) : 
         return True
     return False
 
@@ -111,7 +97,7 @@ def canMove(row, col):
 
 
 class MovableObj : # include pacman, ghost
-    def __init__(self, row, col, imagePath, isPacMan):
+    def __init__(self, row, col, imagePath, isPacMan, startingRow, startingCol ):
         self.imgPath = imagePath
         self.row = row
         self.col = col
@@ -120,22 +106,27 @@ class MovableObj : # include pacman, ghost
         self.newDir = 0
         self.isPacMan = isPacMan
 
-    def update(self):
+    def startDraw() :
+        p = pygame.image.load(src + imgPacClose)
+        p = pygame.transform.scale(p, (square, square))
+        screen.blit(p, (startingRow * square, startingCol * square, square, square))
+
+    def update(self) :
         if self.newDir == 0:
             if canMove(math.floor(self.row - self.speed), self.col) and self.col % 1.0 == 0:
                 self.row -= self.speed
                 self.dir = self.newDir
                 # print(0)
-                if self.isPacMan ==1 :
-                    curPoint[self.row][self.col] = 0
+                if self.isPacMan == 1 :
+                    curPoint[ math.ceil(self.row) ][ int(self.col) ] = 0
                 return
         elif self.newDir == 1:  # 26 , 13,5
             if canMove(self.row, math.ceil(self.col + self.speed)) and self.row % 1.0 == 0:
                 self.col += self.speed
                 self.dir = self.newDir
                 # print(1)
-                if self.isPacMan ==1 :
-                    curPoint[self.row][self.col] = 0
+                if self.isPacMan == 1 :
+                    curPoint[ int(self.row) ][ math.ceil(self.col) ] = 0
                 return
         elif self.newDir == 2:
             if canMove(math.ceil(self.row + self.speed), self.col) and self.col % 1.0 == 0:
@@ -143,7 +134,7 @@ class MovableObj : # include pacman, ghost
                 self.dir = self.newDir
                 # print(2)
                 if self.isPacMan ==1 :
-                    curPoint[self.row][self.col] = 0
+                    curPoint[ math.floor(self.row) ][int(self.col)] = 0
                 return
         elif self.newDir == 3:
             if canMove(self.row, math.floor(self.col - self.speed)) and self.row % 1.0 == 0:
@@ -151,54 +142,67 @@ class MovableObj : # include pacman, ghost
                 self.dir = self.newDir
                 # print(3)
                 if self.isPacMan ==1 :
-                    curPoint[self.row][self.col] = 0
+                    curPoint[int(self.row)][ math.floor(self.col) ] = 0
                 return
         #
+
+        print("does it can happen ?") 
+
         if self.dir == 0:
             if canMove(math.floor(self.row - self.speed), self.col) and self.col % 1.0 == 0:
                 self.row -= self.speed
                 if self.isPacMan ==1 :
-                    curPoint[self.row][self.col] = 0
+                    curPoint[ math.ceil(self.row) ][ int(self.col) ] = 0
             # print(0)
+        
         elif self.dir == 1:
             if canMove(self.row, math.ceil(self.col + self.speed)) and self.row % 1.0 == 0:
                 self.col += self.speed
                 if self.isPacMan ==1 :
-                    curPoint[self.row][self.col] = 0
+                    curPoint[ int(self.row) ][ math.ceil(self.col) ] = 0
             # print(1)
+        
         elif self.dir == 2:
             if canMove(math.ceil(self.row + self.speed), self.col) and self.col % 1.0 == 0:
                 self.row += self.speed
                 if self.isPacMan ==1 :
-                    curPoint[self.row][self.col] = 0
+                    curPoint[ math.floor(self.row) ][int(self.col)] = 0
             # print(2)
         elif self.dir == 3:
             if canMove(self.row, math.floor(self.col - self.speed)) and self.row % 1.0 == 0:
                 self.col -= self.speed
                 if self.isPacMan ==1 :
-                    curPoint[self.row][self.col] = 0
+                    curPoint[int(self.row)][ math.floor(self.col) ] = 0
             # print(3)
-    
 
-    def drawBlackBox(self, row, col):
+    def drawBlackRectangle(self, row, col) :  # draw image
+        pygame.draw.rect(screen, (0, 0, 0) , (col * square, row * square, square, square))
+
+    def drawBlackBoxAndDot(self, row, col) :
+        print(row)
+        print(col)
         if curPoint[row][col] == 2 :
-            pygame.draw.circle(screen, pelletColor, (j * square + square // 2, i * square + square // 2),
+            self.drawBlackRectangle(row, col)
+            pygame.draw.circle(screen, pelletColor, (col * square + square // 2, row * square + square // 2),
                                 square // 4)
         else :
             self.drawBlackRectangle(row, col)
+            print("yes i'm printting black box")
+            print(row,col)
     
     def clearCurObjImage(self):
-        if check(self.row, self.col):       
-            self.drawBlackRectangle(math.floor(self.row), self.col)
-            self.drawBlackRectangle(math.ceil(self.row), self.col)
-            self.drawBlackRectangle(self.row, math.floor(self.col))
-            self.drawBlackRectangle(self.row, math.ceil(self.col))
-        else:
-            self.drawBlackRectangle(self.row, self.col)
-            # if self.isPacMan==0 and curPoint[(int)self.row][(int)self.col]==0: self.drawBlackRectangle(self.row, self.col)
 
-    def drawBlackRectangle(self, row, col) :  # draw image
-        pygame.draw.rect(screen, (0, 0, 0), (col * square, row * square, square, square))
+        # only row or col can be float . other is not
+        print(self.row)
+        print(self.col)
+        print(isInt( self.row ))
+
+        if isInt( self.row ) :
+            self.drawBlackBoxAndDot(int(self.row), math.floor(self.col))
+            self.drawBlackBoxAndDot(int(self.row), math.ceil(self.col))
+        else :
+            self.drawBlackBoxAndDot(math.floor(self.row), int(self.col) )
+            self.drawBlackBoxAndDot(math.ceil(self.row), int(self.col) )
 
     # Draws pacman based on his current state
 
@@ -208,23 +212,21 @@ class MovableObj : # include pacman, ghost
         screen.blit(p, (self.col * square, self.row * square, square, square))
 
 
-    def pause(time):
+    def pause(time) :
         cur = 0
         while not cur == time:
             cur += 1
 
 
 
-
 class Pacman (MovableObj):
-    def __init__(self, row, col,impPac,isPacMan) :
-        MovableObj.__init__(self,row,col,imgPacClose,isPacMan) 
+    def __init__(self, row, col,impPac,isPacMan,startingRow,startingCol) :
+        MovableObj.__init__(self,row,col,imgPacClose,isPacMan, startingRow,startingCol ) 
     
 
 class Blinky(MovableObj):
-    def __init(self,row,col,blinky,isPacMan):
-        MovableObj.__init__(self,row,col,blinky,isPacMan) 
-        self.dir = randrange(4) 
+    def __init(self,row,col,blinky,isPacMan,startingRow,startingCol):
+        MovableObj.__init__(self,row,col,blinky,isPacMan, startingRow,startingCol ) 
 
 
 def drawMap():
@@ -246,22 +248,33 @@ fpsClock = pygame.time.Clock()
 
 
 #create and create character
-initBlinky()
-initPac()
 
-P = Pacman(26, 14,imgPacClose,1)
-S1 = Blinky(26,13,blinky,0)
+P = Pacman(26, 14,imgPacClose,1,14,26)
+
+S1 = Blinky(16,14,blinky,0,14,16)
+
+S2 = Blinky(18,14,cyanghost,0,14,18)
+
+
+
+P.startDraw
+S1.startDraw
+S2.startDraw
 
 pygame.display.update()
 
 
 def doGhostMovRand():
-    while True:
+    while True :
         new = randrange(4)
         if new != S1.dir: 
             S1.newDir = new
             break
-    
+        new = randrange(4)
+        if new != S2.dir: 
+            S2.newDir = new
+            break
+step = 0 
 
 while not game_over:
     for event in pygame.event.get():
@@ -277,16 +290,20 @@ while not game_over:
             elif event.key == pygame.K_a:
                 P.newDir = 3
 
-
     S1.clearCurObjImage()
     S1.update()
     S1.drawCurObjImage()
+    S2.clearCurObjImage()
+    S2.update()
+    S2.drawCurObjImage()
 
     P.clearCurObjImage()
     P.update()
     P.drawCurObjImage()  # draw Pacman
 
-    doGhostMovRand()
+    if step % 15 == 0 :
+      doGhostMovRand()
 
     pygame.display.update()
     fpsClock.tick(fps)
+    step += 1
