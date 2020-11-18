@@ -4,6 +4,8 @@ import math
 from random import randrange
 from tkinter import *  
 from tkinter import messagebox  
+import queue    
+
 #shiet
 
 
@@ -48,18 +50,50 @@ originalGameBoard = [
     [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
 ]
 
+originalGameBoard = [
+    [3,3,3,3,3,3,3,3,3],
+    [3,3,3,3,3,3,3,3,3],
+    [3,3,3,3,3,3,3,3,3],
+    [3,1,2,2,2,2,2,2,3],
+    [3,2,2,2,2,2,2,2,3],
+    [3,2,3,2,3,3,3,3,3],
+    [3,2,3,2,2,2,2,2,3],
+    [3,2,3,2,2,2,2,2,3],
+    [3,2,3,2,2,2,2,2,3],
+    [3,2,2,2,2,2,2,2,3],
+    [3,3,3,3,3,3,3,3,3]
+]
 
+# # map2
+# originalGameBoard = [
+#     [3,3,3,3,3,3,3,3,3],
+#     [3,3,3,3,3,3,3,3,3],
+#     [3,3,3,3,3,3,3,3,3],
+#     [3,1,2,2,2,2,2,2,3],
+#     [3,2,3,2,3,3,3,3,3],
+#     [3,2,2,2,2,2,2,2,3],
+#     [3,2,3,2,2,2,2,2,3],
+#     [3,2,3,2,2,2,2,2,3],
+#     [3,2,3,2,2,2,2,2,3],
+#     [3,2,2,2,2,2,2,2,3],
+#     [3,3,3,3,3,3,3,3,3]
+# ]
 
+#MAP COFIGURE
 
 gameBoard = copy.deepcopy(originalGameBoard)
 spriteRatio = 3 / 2
-square = 15  # Size of each unit square
+square = 50  # Size of each unit square
 spriteOffset = square * (1 - spriteRatio) * (1 / 2)
 (width, height) = (len(gameBoard[0]) * square, len(gameBoard) * square)  # Game screen
+
+(WS, HS) = ( len(gameBoard[0]) , len(gameBoard) )
+
+
 #print(spriteOffset)
 screen = pygame.display.set_mode((width, height))
 pygame.display.flip()
-game_over = False  # Biến đánh dấu sự kiện kết thúc game 
+game_over = False
 
 SPEED = 1/4
 
@@ -89,10 +123,33 @@ pelletColor = (222, 161, 133)
 # print(len(gameBoard))  # vertical
 clock = pygame.time.Clock()
 src = "src/"
-imgPacClose = "yellow2.jpg"  # hình tròn vàng
+imgPacClose = "yellow2.jpg" 
 y = "image1.jpg"  # tường màu xanh
 blinky = "blinky.png"
 cyanghost = "cyan.jpg"
+
+
+
+# SPEEDP = 1/4
+# d4val = [ (-SPEEDP,0), (0,SPEEDP), (SPEEDP,0), (0,-SPEEDP)  ]
+# SPEEDG = 2/4
+# d4valG = [ (-SPEEDG,0), (0,SPEEDG), (SPEEDG,0), (0,-SPEEDG)  ]
+
+
+# GHOST FREE MOVE
+global mx1,dx4,dy4
+d4x = [ -1 , 0 , 1 , 0]
+d4y = [ 0 , 1 , 0 , -1]
+
+
+mx1 = copy.deepcopy(originalGameBoard)
+for i in range( len(mx1) ) :
+    for j in range( len(mx1[0]) ) :
+        # print(f'{i} {j}')
+        if mx1[i][j] != 3 :
+            mx1[i][j] = 1
+
+
 
 def isInt( x ) :
     if x == int(x) : 
@@ -130,7 +187,7 @@ def canMove(row, col, direct) :
         return  gameBoard[ y ][ x ] != 3 and isInt(col) 
     if direct == 3 :
         return  gameBoard[ y ][ x ] != 3 and isInt(row) 
-    return True
+
 
 
 #tinh' diem?
@@ -163,51 +220,62 @@ class MovableObj : # include pacman, ghost
         global score
         if self.newDir == 0:
             if canMove(self.row,self.col, self.newDir ) == True :
+                (y,x) = reachCel(self.row,self.col,self.newDir)
                 self.row -= self.speed
                 self.dir = self.newDir
                 # print(0)
-                (y,x) = reachCel(self.row,self.col,self.newDir)
+                
                 if self.isPacMan == 1 :
                     if ( curPoint[ y][ x] == 2 ) :
                         score+=1
                         showScore(5,5)
                         curPoint[ y ][ x ] = 0
+                else:
+                    mx1[y][x] = 0
                 return
         elif self.newDir == 1:  # 26 , 13,5
             if canMove(self.row,self.col,1):
+                (y,x) = reachCel(self.row,self.col,self.newDir)
                 self.col += self.speed
                 self.dir = self.newDir
                 # print(1)
-                (y,x) = reachCel(self.row,self.col,self.newDir)
+                
                 if self.isPacMan == 1 :
                     if ( curPoint[y][ x] == 2 ) :
                         score+=1
                         showScore(5,5)
                         curPoint[ y ][ x ] = 0
+                else:
+                    mx1[ y ][ x ] = 0
                 return
         elif self.newDir == 2:
             if canMove(self.row,self.col,2):
+                (y,x) = reachCel(self.row,self.col,self.newDir)
+
                 self.row += self.speed
                 self.dir = self.newDir
                 # print(2)
-                (y,x) = reachCel(self.row,self.col,self.newDir)
                 if self.isPacMan == 1 :
                     if ( curPoint[ y][ x] == 2 ) :
                         score+=1
                         showScore(5,5)
                         curPoint[ y ][ x ] = 0
+                else:
+                    mx1[y][x] = 0
                 return
         elif self.newDir == 3:
             if canMove(self.row,self.col,3):
+                (y,x) = reachCel(self.row,self.col,self.newDir)
                 self.col -= self.speed
                 self.dir = self.newDir
                 # print(3)
-                (y,x) = reachCel(self.row,self.col,self.newDir)
                 if self.isPacMan == 1 :
-                    if ( curPoint[ y][ x] == 2 ) :
+                    if ( curPoint[ y ][ x] == 2 ) :
                         score+=1
                         showScore(5,5)
                         curPoint[ y ][ x ] = 0
+                else:
+                    mx1[y][x] = 0
                 return
         #
 
@@ -215,45 +283,53 @@ class MovableObj : # include pacman, ghost
 
         if self.dir == 0:
             if canMove(self.row,self.col,0):
-                self.row -= self.speed
                 (y,x) = reachCel(self.row,self.col,self.dir)
+                self.row -= self.speed
                 if self.isPacMan == 1 :
                     if ( curPoint[ y][ x] == 2 ) :
                         score+=1
                         showScore(5,5)
                         curPoint[ y ][ x ] = 0
+                else:
+                    mx1[y][x] = 0
             # print(0)
         
         elif self.dir == 1:
             if canMove(self.row,self.col,1):
-                self.col += self.speed
                 (y,x) = reachCel(self.row,self.col,self.dir)
+                self.col += self.speed
                 if self.isPacMan == 1 :
                     if ( curPoint[ y][ x] == 2 ) :
                         score+=1
                         showScore(5,5)
                         curPoint[ y ][ x ] = 0
+                else:
+                    mx1[y][x] = 0
             # print(1)
         
         elif self.dir == 2:
             if canMove(self.row,self.col,2):
-                self.row += self.speed
                 (y,x) = reachCel(self.row,self.col,self.dir)
+                self.row += self.speed
                 if self.isPacMan == 1 :
                     if ( curPoint[ y][ x] == 2 ) :
                         score+=1
                         showScore(5,5)
                         curPoint[ y ][ x ] = 0
+                else:
+                    mx1[y][x] = 0
             # print(2)
         elif self.dir == 3:
             if canMove(self.row,self.col,3):
-                self.col -= self.speed
                 (y,x) = reachCel(self.row,self.col,self.dir)
+                self.col -= self.speed
                 if self.isPacMan == 1 :
                     if ( curPoint[ y][ x] == 2 ) :
                         score+=1
                         showScore(5,5)
                         curPoint[ y ][ x ] = 0
+                else:
+                    mx1[y][x] = 0
             # print(3)
 
     def drawBlackRectangle(self, row, col) :  # draw image
@@ -322,22 +398,7 @@ def drawMap():
                                 square // 4)
 
 
-drawMap()
-fps = 30
-fpsClock = pygame.time.Clock()
 
-#create and create character
-
-P = Pacman(26, 14,imgPacClose,1)
-
-S1 = Blinky(16,14,blinky,0)
-
-S2 = Blinky(18,14,cyanghost,0)
-
-P.startDraw
-S1.startDraw
-S2.startDraw
-pygame.display.update()
 
 
 
@@ -372,8 +433,7 @@ def isTouch(a , b) :
         return True 
     return False
 
-def pacIsBlocked( node ):
-    return False
+
 
 #some contance
 global NUM_MAP_DOT
@@ -385,7 +445,7 @@ for i in range(len(gameBoard) ) :
             NUM_MAP_DOT+=1
 
 MAXIMUMSCORE = 10000 * 10000
-INF = 100000 * 100000
+INF = 100000 * 100000 
 
 remDot = numOfPoint
 print(f'Rem dot : {remDot}')
@@ -397,10 +457,10 @@ def randomD():
     l1 = randrange(1000000000)
     m1 = randrange(1000000000)
     x1 = l1 % m1
-    print(x1)
+    #print(x1)
     l1 = randrange(1000000000)
     m1 = randrange(1000000000)
-    print(x1)
+    #print(x1)
     x1 = x1 +  l1 % m1
     return x1 % 4
 
@@ -408,9 +468,9 @@ def randomD():
 # return ( score , list of point ) alway is G1 , G2
 # *** ( row , col )
 # 0 - up, 1 - right, 2 - down, 3 - left
-SPEEDP = 1/4
+SPEEDP = 4/4
 d4val = [ (-SPEEDP,0), (0,SPEEDP), (SPEEDP,0), (0,-SPEEDP)  ]
-SPEEDG = 2/4
+SPEEDG = 4/4
 d4valG = [ (-SPEEDG,0), (0,SPEEDG), (SPEEDG,0), (0,-SPEEDG)  ]
 
 
@@ -432,59 +492,260 @@ def isPacLose( node , d1 , d2 ):
     #check pacman is touched by ghost
         return inside( node.PP , ( node.G1[0] - d4valG[d1][0] , node.G1[1] - d4valG[d1][1] ) , node.G1 ) or inside( node.PP , ( node.G2[0] - d4valG[d2][0] , node.G2[1] - d4valG[d2][1] ) , node.G2 )
     #check pacman is touched by ghost
+def pacIsBlocked( snode ):
+    node = Node( ((int)(snode.PP[0]),(int)(snode.PP[1]) ) , ((int)(snode.G1[0]) ,(int)(snode.G1[1])) , ((int)(snode.G2[0]) ,(int)(snode.G2[1]) ) )
 
+
+    # print(f'node : {node.PP} {node.G1} {node.G2} ' )
+    res  = [ (-1,-1) , (-1,-1) ]
+
+    notReachP = True
+
+    q = queue.Queue(maxsize = 10000)
+    # print(f' {WS} {HS} ')
+    done = [ [ 0 for i in range(WS)] for j in range(HS) ] 
+    
+    trace = [ [ 0 for i in range(WS)] for j in range(HS) ] 
+
+    MAXDISC = 1000000
+    disc = [ [ MAXDISC for i in range(WS)] for j in range(HS) ] 
+
+    q.put( [ node.G1 , -1 ] )
+    disc[node.G1[0]][node.G1[1]] = 0
+    while( not q.empty() ) :
+        front = q.get()
+        predir = front[1]
+        x = front[0][0]
+        y = front[0][1]
+        # print(f'{x} {y}')
+        done[x][y] = 1
+        trace[x][y] = predir
+
+        if (x == node.PP[0] and y == node.PP[1]):
+            notReachP = False
+            break;
+
+        for d in range(4) :
+            xx = x + d4x[d]
+            yy = y + d4y[d]
+
+            if xx < 0 or xx >= HS or yy < 0 or yy >= WS :
+                continue
+            if done[xx][yy] == 0 and mx1[xx][yy] != 3 :
+                q.put( [ (xx,yy) , d ] )
+                disc[xx][yy] = min(disc[xx][yy] , disc[x][y] + 1)
+
+    # print(f'disc g1 to pp { disc[ node.PP[0] ][ node.PP[1] ] }')
+    #no path to P ? never exit, but for sure
+    # if notReachP :
+        # print("no path from g1 to p")
+    u = node.PP
+    dir1 = -1
+    
+    #tracing for d1_P
+
+    done2 = [ [ 0 for i in range(WS)] for j in range(HS) ] 
+    trace2 = [ [ 0 for i in range(WS)] for j in range(HS) ] 
+
+    while( u != node.G1 ):
+        done2[ u[0] ][ u[1] ] = 1
+        done[ u[0] ][ u[1] ] = 2
+        # print(f'p1 : {u}')
+        dir1 = trace[ u[0] ] [ u[1] ]
+        u = ( u [0] - d4x[dir1]  , u[1] - d4y[dir1] )
+
+    # for i in range(HS):
+    #     for j in range(WS):
+    #         print(done[i][j],end=" ")
+    #     print()  
+    # print()  
+
+    #pith good d point shorest path form Pac to P2 do not overlap the path 1
+
+    notReachG2 = True
+
+    q = queue.Queue(maxsize = 10000)
+
+    q.put( [ node.PP , -1 ] )
+    disc2 = [ [ MAXDISC for i in range(WS)] for j in range(HS) ] 
+    disc2[ node.PP[0] ][ node.PP[1] ] = 0
+    while( not q.empty() ) :
+        front = q.get()
+        predir = front[1]
+        x = front[0][0]
+        y = front[0][1]
+        done2[x][y] = 1
+        trace2[x][y] = predir
+
+        if (x == node.G2[0] and y == node.G2[1]):
+            notReachG2 = False
+            break;
+
+        for d in range(4) :
+            xx = x + d4x[d]
+            yy = y + d4y[d]
+
+            if xx < 0 or xx >= HS or yy < 0 or yy >= WS :
+                continue
+            if done2[xx][yy] == 0 and mx1[xx][yy] != 3 :
+                q.put( [ (xx,yy) , d ] )
+                disc2[xx][yy] = min(disc2[xx][yy] , disc2[x][y] + 1)
+
+    #no path to P ? never exit, but for sure
+    # print(f'disst2 {disc2[ node.G2[0] ][ node.G2[1] ]} ')
+    # if notReachG2 :
+        # print("no path from PP to G2 ")
+
+    
+
+    #tracing for dir2
+    # print(notReachG2)
+    # if notReachG2 :
+        # print("no path from pp to g2")
+        # return (dir1,-1)
+    u = node.G2
+    dir2 = -1
+
+    while( not notReachG2 and u != node.PP ):
+        # print(u)
+        done2[ u[0] ] [ u[1] ] = 2
+        dir2 = trace2[ u[0] ] [ u[1] ]
+        # print(f'p2 : {u}')
+        u = ( u [0] - d4x[dir2]  , u[1] - d4y[dir2] )
+    
+    # print("shiet")
+    dir2 = trace2[node.G2[0]][node.G2[1]]
+    # print(f'dir2 : {dir2} ')
+    # print(f'dir2 : {dir2} ')
+
+
+    # for i in range(HS):
+    #     for j in range(WS):
+    #         print(done[i][j],end=" ")
+    #     print()  
+    # print()  
+    # for i in range(HS):
+    #     for j in range(WS):
+    #         print(done2[i][j],end=" ")
+    #     print()  
+    # print()  
+    # print()  
+
+    #tracing time 2 for check no way to pac escapse
+
+    check = True
+    # print(f'dis pp (g1) {disc[ node.PP[0] ][ node.PP[1] ]}')
+    u = node.PP
+    done[ node.G1[0] ][ node.G1[1] ] = 2
+    while( u != node.G1 ):
+        if  disc[ u[0] ][ u[1] ] <= disc[ node.PP[0] ][ node.PP[1] ] and  disc[ u[0] ][ u[1] ] >= disc[ node.PP[0] ][ node.PP[1] ]/2 :
+            x = u[0]
+            y = u[1]
+            for d in range(4):
+                xx = x + d4x[d]
+                yy = y + d4y[d]
+                if xx < 0 or xx >= HS or yy < 0 or yy >= WS :
+                    continue
+                if ( done[xx][yy] != 2 and ( notReachG2 or done2[xx][yy] != 2 ) and mx1[xx][yy] != 3) :
+                    # print(f'False case : {x} {y}  d :  {disc[x][y]},  {xx} {yy} ')
+                    check = False
+
+        dir = trace[ u[0] ][ u[1] ]
+        u = ( u [0] - d4x[dir]  , u[1] - d4y[dir] )
+    
+    # after check path form g1 to pp 
+    # if there're no path to g2 and check still true
+    # so g1 is enough to blockpac
+
+    if check and notReachG2 :
+        # print("case g1 is enough to block pp")
+        return (dir1 , randrange(4))
+    if (not check):
+        return (-1,-1)
+
+    # print(f'dis g2 {disc2[ node.G2[0] ][ node.G2[1] ]}')
+    u = node.G2
+    while( u != node.PP ):
+        if  disc2[ u[0] ][ u[1] ] <= disc2[ node.G2[0] ][ node.G2[1] ] and  disc2[ u[0] ][ u[1] ] <= disc2[ node.G2[0] ][ node.G2[1] ]/2 :
+            x = u[0]
+            y = u[1]
+            for d in range(4):
+                xx = x + d4x[d]
+                yy = y + d4y[d]
+                if xx < 0 or xx >= HS or yy < 0 or yy >= WS :
+                    continue
+                if ( done[xx][yy] != 2 and done2[xx][yy] != 2 and mx1[xx][yy] != 3) :
+                    # print(f'False case 2 : {x} {y}  d :  {disc[x][y]},  {xx} {yy} ')
+                    check = False
+
+        dir = trace2[ u[0] ][ u[1] ]
+        u = ( u [0] - d4x[dir]  , u[1] - d4y[dir] )
+
+
+    # print(f'check : {check} ')
+    if check :
+        return (dir1, (dir2 + 2)%4 )
+    else :
+        return (-1,-1)
 
 def minimax(node, isMax, depth, curScore, alpha, beta, curDot, dir1, dir2) :
     currentScore = curScore
-    #print()
-    #print(f'CurScore {currentScore} of {cnt}')
+    # print()
+    # print(f'  {isMax}  CurScore {currentScore} depth : {depth}  {node.PP}   {node.G1}   {node.G1} ')
     #CHECK FOR TERMINAL NODE / LEAF
     #case when over the MAXDEPTH
     
     #pacwin 
     if isPacWin(curDot) :
-        #print("PACMAN WIN !PACMAN WIN !PACMAN WIN !PACMAN WIN !PACMAN WIN !PACMAN WIN !PACMAN WIN !PACMAN WIN !PACMAN WIN !PACMAN WIN !PACMAN WIN !PACMAN WIN !PACMAN WIN !PACMAN WIN !PACMAN WIN !VVV")
+        # print("PACMAN WIN !PACMAN WIN !")
         return ( INF + score , [ 0,0 ] ) 
     #paclose
-    if dir1 != -1 and isPacLose( node , dir1, dir2 ) :
-        #print("PACMAN LOSE !")
-        return ( -INF + score , [ 0,0 ] )
 
-    if depth > MAXDEPTH :
-        #print("REACH MAX DEPTH !")
+    
+    if dir1 != -1 and isPacLose( node , dir1, dir2 ) :
+        # print("PACMAN LOSE !")
+        return ( -INF + score , [ 0,0 ] )
+    dirb = (-1,-1)
+    if ( isInt(node.PP[0]) and isInt(node.PP[1]) and isInt(node.G1[0]) and isInt(node.G1[1]) and isInt(node.G2[0]) and isInt(node.G2[1])):
+        # print(f'{node.G1[0]} , {node.G1[1]}')
+        dirb = (-1,-1)
+        dirb = pacIsBlocked(node)
+    if (dirb != (-1,-1)) :
+        # print("Pacmin is blocked !!!!")
+        return ( -INF + score , dirb )
+
+    if depth >= MAXDEPTH :
+        # print("REACH MAX DEPTH !")
         return ( currentScore , [ 0,0 ]   )
     
 
     if isMax :
         #pacman turn
-        #print("MAXNODE - PACMAN TURN")
+        # print("MAXNODE - PACMAN TURN")
         #score , list position
         bestChoice = ( -1 , [ 0,0 ] )
         isEqual = True
-        firstPic = 0
 
-        startd = randrange(1000000)
+        startd =   randrange(1000000)%4
 
         for sd in range(4) :
-
-            d = (sd + startd)%4
-
+            d = ( startd + sd )%4
             newPacPos = ( node.PP[0] + d4val[d][0] , node.PP[1] + d4val[d][1] ) 
 
             if( canMove( node.PP[0] , node.PP[1] , d ) ) :
                 # print("pac canmove somw")
 
                 (dotY,dotX) = reachCel( node.PP[0] , node.PP[1] , d )
-                #print(f'Child of{cnt}')
-                #print(f'Pacpos{node.PP}')
-                #print(f'newPacpos{newPacPos}')
+
+                # print(f'Pacpos{node.PP}')
+                # print(f'newPacpos{newPacPos}')
                 # print(f'dot pos : {dotY} {dotX}')
                 # print(mnmCurPoint[dotY][dotX])
                 
                 takenDot = 0
 
                 if mnmCurPoint[dotY][dotX] == 2 :
-                    #print("take!")
+                    # print("take!")
                     mnmCurPoint[dotY][dotX] = 0
                     takenDot = 1
                     curDot+=1
@@ -494,10 +755,8 @@ def minimax(node, isMax, depth, curScore, alpha, beta, curDot, dir1, dir2) :
                 newNode = Node(newPacPos,node.G1,node.G2 )
 
                 optChoice = minimax(newNode, False,depth+1, currentScore + takenDot , alpha, beta , curDot , dir1,dir2)
-                if d == 0 :
-                    firstPic = optChoice[0]
-                if d > 0 and optChoice[0] != firstPic :
-                    isEqual = False
+                # print(f' res of depth {isMax}  {depth}, {node.PP} {node.G1} {node.G1} : { optChoice[0] }  { optChoice[1] } {d} ')
+
 
                 if takenDot != 0 :
                     #print("recover!")
@@ -507,11 +766,14 @@ def minimax(node, isMax, depth, curScore, alpha, beta, curDot, dir1, dir2) :
 
                 if( bestChoice[0] == -1 or optChoice[0] > bestChoice[0]) : 
                     #bestChoice = ( optChoice[0], [newPacPos] )
+                    if bestChoice[0] != -1 :
+                        isEqual = False 
+                    
                     bestChoice =( optChoice[0], [d])
                     alpha = max( alpha , bestChoice[0] )
-                    if beta <= alpha :
-                        #print("Prunning Alphabeta !!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                        break
+                    # if beta <= alpha :
+                    #     #print("Prunning Alphabeta !!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    #     break
                 
             
         
@@ -523,18 +785,24 @@ def minimax(node, isMax, depth, curScore, alpha, beta, curDot, dir1, dir2) :
                     
 
     else :
-        #print("MIN NODE - GHOST TURN")
+        # print("MIN NODE - GHOST TURN")
 
         bestChoice = ( INF , [-1,-1] )
         isEqual = True
-        firstPic = 0
-        startd = randrange(100000)
+
+
+        startd = randrange(1000000)%4
+
         for sig1 in range(4) :
             for sig2 in range(4) :
                 ig1 = (startd + sig1)%4
                 ig2 = (startd + sig2)%4
                 newPosG1 = ( node.G1[0] + d4valG[ig1][0] , node.G1[1] + d4valG[ig1][1] )
                 newPosG2 = ( node.G2[0] + d4valG[ig2][0] , node.G2[1] + d4valG[ig2][1] )
+                # shiet1 = canMove( node.G1[0] , node.G1[1] , ig1)
+                # shiet2 = canMove( node.G2[0]  , node.G2[1]  ,ig2) 
+                # if (depth == 0) :
+                #     print( f' depth: {depth}  : {newPosG1} {newPosG2 } can r { shiet1 }  { shiet2 } ')
                 if( canMove( node.G1[0] , node.G1[1] , ig1)  and canMove( node.G2[0]  , node.G2[1]  ,ig2) ) :
 
                     # print("ghost canmove somw")
@@ -545,17 +813,18 @@ def minimax(node, isMax, depth, curScore, alpha, beta, curDot, dir1, dir2) :
 
                     newNode = Node( node.PP , newPosG1 , newPosG2 )
                     optChoice = minimax(newNode, True, depth+1, currentScore, alpha, beta , curDot , ig1 , ig2 )
-                    if ig1 == 0 and ig2 == 0 :
-                        firstPic = optChoice[0]
-                    if ig1 != 0 or ig2 != 0 :
-                       if  optChoice[0] != firstPic :
-                           isEqual = False
+                    # if (depth == 0) :
+                    #     print(f' res of depth  {isMax}  {depth}, {node.PP} {node.G1} {node.G1} : { optChoice[0] }  { optChoice[1] } {ig1} {ig2} ')
+
+
                     if( optChoice[0] < bestChoice[0] ) : 
+                        if (bestChoice[1] != [-1,-1]) :
+                            isEqual = False
                         bestChoice = ( optChoice[0], [ig1,ig2] )
                         beta = min( beta , bestChoice[0] )
-                        if beta <= alpha :
-                            #print("Prunning Alphabeta !!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                            break
+                        # if beta <= alpha :
+                        #     #print("Prunning Alphabeta !!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                        #     break
         #print(f"ghost best choice score {bestChoice[0]} of {cnt}")
         if isEqual :
             # print("equal")
@@ -564,9 +833,100 @@ def minimax(node, isMax, depth, curScore, alpha, beta, curDot, dir1, dir2) :
         return bestChoice
 
 
-    
 
-MAXDEPTH = 6
+
+# for i in range( len(mx1) ) :
+#     for j in range( len(mx1[0]) ) :
+#         print(mx1[i][j], end=' ')
+#     print()
+
+
+def bfs( gpos ):
+
+    nearestPoint = (-1,-1)
+    q = queue.Queue(maxsize=10000)
+    q.put( [gpos,-1] )
+    #print(f'gpos : {gpos}' )
+    done = [[0 for i in range(WS)] for j in range(HS)]
+    trace = [[0 for i in range(WS)] for j in range(HS)]
+
+    while( nearestPoint == (-1,-1) and not q.empty() ) :
+        front = q.get()
+        # print(front)
+        x = front[0][0]
+        y = front[0][1]
+        predir = front[1]
+        # print(x , y)
+        done[x][y] = 1
+
+        trace[x][y] =  predir
+
+        if mx1[ x ][ y ] == 1 :
+            nearestPoint = front[0]
+            break;
+        startd = randrange(100000000) % 4
+        # print(f'startd {startd}')
+        for d in range(4) :
+            # print(f' d : {(d + startd)%4}'  )
+            xx = x + d4x[ (d + startd)%4 ]
+            yy = y + d4y[ (d + startd)%4 ]
+
+            if xx < 0 or xx >= len(mx1) or yy < 0 or yy >= len(mx1[0]) :
+                continue
+            if xx < 0 or xx >= len(done) or yy < 0 or yy >= len(done[0]) :
+                continue
+            # print(f'xx,yy { (xx,yy) } {done[ xx ] [ yy ]} {mx1[ xx ] [ yy ]}')
+            if done[ xx ] [ yy ] ==  0 and mx1[ xx ][ yy ] != 3 :
+                q.put( [ (xx,yy) , (d + startd)%4  ] )
+                # print(f'put { (xx,yy) }')
+    
+    if (nearestPoint == (-1,-1)) :
+        return (nearestPoint,-1)
+
+    dir  = -1
+    u = nearestPoint
+    while( u != gpos ) :
+        # print(f'u :{u}')
+        dir = trace[ u[0] ][ u[1] ]
+        u = ( u[0] - d4x[dir] , u[1] - d4y[dir] )
+
+    return (nearestPoint , dir )
+
+# mx1[9][1] = 1 
+# mx1[9][5] = 1            
+# mx1[9][6] = 1            
+# x = bfs( (4,3) )
+# print(x)
+
+
+def dToPoint(gpos, point) :
+
+
+    if isInt(gpos[0])  and int(gpos[0]) == point[0]:
+        if gpos[1] < point[1] :
+            return 2
+        else:
+            return 0
+    if isInt(gpos[1]) and int(gpos[1]) == point[1]:
+        if gpos[0] < point[0] :
+            return 1
+        else:
+            return 3
+    if gpos[1] < point[1] :
+            return 2
+    else:
+            return 0
+    if gpos[0] < point[0] :
+            return 1
+    else:
+            return 3
+
+
+def fillPath():
+    for i in range( len(mx1) ) :
+        for j in range( len(mx1[0]) ):
+            if mx1[i][j] == 0 :
+                mx1[i][j] = 1
 
 def doGhostMoveByMiniMax(pacPos, G1 , G2):
 
@@ -576,27 +936,106 @@ def doGhostMoveByMiniMax(pacPos, G1 , G2):
     S1.newDir = minchoice[1][0]
     S2.newDir = minchoice[1][1]
 
-    if minchoice[1][0] == -2  :
-        print("is random move !")
-        if step%15 == 0 :
-            tmp = randomD()
-            while(tmp == S1.newDir):
-                tmp = randomD()
-            S1.newDir = tmp
-            tmp = randomD()
-            while(tmp == S2.newDir):
-                tmp = randomD()
-            S2.newDir = tmp
+    if minchoice[1][0] == -2  and minchoice[0] >= 0:
+        # print("is random move !")
+        sG1 = ( int(G1[0]) , int(G1[1]) )
+         
+        res = bfs(sG1)
+        dir1 = res[1]
+
+        if dir1 == -1 :
+            fillPath()
+            S1.newDir = randomD()
+        else:
+            
+            S1.newDir = dir1
+
+
+
+        # print(f' {G1}   {res[0]} {dir1} ')
+        # for i in range( len(mx1) ) :
+        #     for j in range( len(mx1[0]) ):
+        #         print(mx1[i][j],end='')
+        #     print()
+        # print()
+
+
+        S2.newDir = randomD()
     else :
+        # print("minimax!")
         S1.newDir = minchoice[1][0]
         S2.newDir = minchoice[1][1]
         #print(minchoice[1][0])
         #print(minchoice[1][1])
         #print()
 
+    # print(f'mnm: {minchoice[0]}   {S1.newDir} {S2.newDir} ')
 
-    # print(f'mnm: {S1.newDir} {S2.newDir} ')
 
+
+
+
+#GAME CONFIGURE
+
+drawMap()
+fps = 30
+fpsClock = pygame.time.Clock()
+
+#create and create character
+
+P = Pacman( 4 , 1 ,imgPacClose,1)
+
+S1 = Blinky( 9 , 6 ,blinky,0)
+
+S2 = Blinky( 9 , 7 ,cyanghost,0)
+
+
+
+#MINIMAX'S DEPTH
+MAXDEPTH = 4
+
+
+
+#RAWWWW TESSTTT COPYING CAN REMOVE SAFETY
+
+# curNode = Node( (3,1) , (3,3) , (9,7) ) 
+# minchoice = minimax(curNode,False,0,0,-INF,INF,0,-1,-1)
+
+
+# print(minchoice)
+
+# test isblock
+#C1
+# curnode = Node( (6,1), (8,1), (4,1) ) # (0,2) C1
+
+# curnode = Node( (6,1), (8,7), (4,1) ) # (0,2) C1_2
+# curnode = Node( (6,1), (8,7), (3,2) ) # (0,2) C1_3
+# curnode = Node( (6,1), (7,7), (3,2) ) # (0,2) C1_4
+
+P = Pacman( 6 , 1 ,imgPacClose,1)
+
+S1 = Blinky( 9 , 3 ,blinky,0)
+
+S2 = Blinky( 3 , 1 ,cyanghost,0)
+
+#SC
+# curnode = Node( (4,7), (7,4), (4,1) )
+
+
+
+#bad node ************* map 2*************
+# curnode = Node( (3,1), (9,6), (9,7) ) 
+
+# case ghost 1 is enough to block pac,************* map 2*************
+# curnode = Node( (3,7), (3,1), (4,1) ) (1,_)
+
+
+#RAWWWW TESSTTT COPYING
+
+P.startDraw
+S1.startDraw
+S2.startDraw
+pygame.display.update()
 
 
 step = 0 
@@ -644,6 +1083,7 @@ while not game_over:
             messagebox.showinfo("LOSE ANNOUNCEMENT","Game Over!") 
             game_over = True
             continue
+        
  
     if S1.col == P.col:
          if float(abs(P.row-S1.row))<1.0:
@@ -667,10 +1107,10 @@ while not game_over:
     # if step % 15 == 0 :
     #   doGhostMovRand()
     if isInt(P.row) and isInt(P.col) and isInt(S1.row) and isInt(S1.col) and isInt(S2.col) and isInt(S2.row) :
-        print(f' {P.row} {P.col} {S1.row} {S1.col} {S2.row} {S1.col}')
+        # print(f' {P.row} {P.col} {S1.row} {S1.col} {S2.row} {S1.col}')
         doGhostMoveByMiniMax( (P.row,P.col) , (S1.row,S1.col), (S2.row,S2.col))
-        print()
-        print()
+        # print()
+        # print()
 
     pygame.display.update()
     fpsClock.tick(fps)
